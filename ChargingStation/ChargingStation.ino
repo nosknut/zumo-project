@@ -77,6 +77,8 @@ void updateCarLink()
             }
         }
     }
+
+    carLink.update(chargeState);
 }
 
 void setup()

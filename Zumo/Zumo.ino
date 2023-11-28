@@ -13,7 +13,13 @@ void updateChargerLink()
 {
     if (chargerLink.available())
     {
-        if (chargerLink.read())
+        ChargerLinkSignal signal = chargerLink.read();
+
+        if (signal == ChargerLinkSignal::LINK_AVAILABLE) {
+            Serial.println("Detected charger link!");
+        }
+
+        if (signal == ChargerLinkSignal::COMMAND)
         {
             ChargerState chargerState = chargerLink.getChargerState();
 

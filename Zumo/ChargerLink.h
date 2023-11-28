@@ -6,6 +6,13 @@
 #include "ChargerState.h"
 #include "ZumoIrSocket.h"
 
+enum class ChargerLinkSignal
+{
+    NONE = 0,
+    COMMAND = 1,
+    LINK_AVAILABLE = 2,
+};
+
 struct ChargerLink
 {
     ZumoIrSocket &stream;
@@ -27,7 +34,7 @@ struct ChargerLink
         doc["e"] = targetChargeLevel;
 
         serializeMsgPack(doc, stream);
-        
+
         Serial.println("Sent message to charger:");
         serializeJson(doc, Serial);
         Serial.println();
@@ -40,7 +47,7 @@ struct ChargerLink
         doc["a"] = 0;
 
         serializeMsgPack(doc, stream);
-        
+
         Serial.println("Sent message to charger:");
         serializeJson(doc, Serial);
         Serial.println();
@@ -51,18 +58,25 @@ struct ChargerLink
         return stream.available();
     }
 
-    bool read()
+    ChargerLinkSignal read()
     {
+        if (stream.peek() == '@')
+        {
+            stream.read();
+            return ChargerLinkSignal::LINK_AVAILABLE;
+        }
+
         DynamicJsonDocument doc(100);
         DeserializationError error = deserializeMsgPack(doc, stream);
 
-        while (!stream.doneReading()) stream.read();
+        while (!stream.doneReading())
+            stream.read();
 
         if (error)
         {
             Serial.print("deserializeMsgPack() failed: ");
             Serial.println(error.c_str());
-            return false;
+            return ChargerLinkSignal::NONE;
         }
 
         Serial.println("Received message from charger:");
@@ -71,9 +85,10 @@ struct ChargerLink
 
         int command = doc["a"];
 
-        if (command != 2) {
+        if (command != 2)
+        {
             Serial.println("Received invalid command from car: " + command);
-            return false;
+            return ChargerLinkSignal::NONE;
         }
 
         chargerState.carId = doc["b"];
@@ -82,7 +97,7 @@ struct ChargerLink
         chargerState.accountBalance = doc["e"];
         chargerState.targetChargeLevel = doc["f"];
 
-        return true;
+        return ChargerLinkSignal::COMMAND;
     }
 
     ChargerState getChargerState()
