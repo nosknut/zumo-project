@@ -1,6 +1,9 @@
 #ifndef IR_READ_SOCKET_H
 #define IR_READ_SOCKET_H
 
+#define DECODE_NEC 
+#define DECODE_FAST 
+
 #include <Arduino.h>
 #include <Stream.h>
 #include <IRremote.hpp>
