@@ -43,7 +43,7 @@ struct CarLink
     {
         DeserializationError error = deserializeMsgPack(incomingMessageDoc, stream);
         
-        while (!stream.doneReading());
+        while (!stream.doneReading()) stream.read();
         
         if (error)
         {

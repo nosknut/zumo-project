@@ -56,7 +56,7 @@ struct ChargerLink
         DynamicJsonDocument doc(100);
         DeserializationError error = deserializeMsgPack(doc, stream);
 
-        while (!stream.doneReading());;
+        while (!stream.doneReading()) stream.read();
 
         if (error)
         {
