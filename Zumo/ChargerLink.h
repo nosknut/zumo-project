@@ -26,7 +26,7 @@ struct ChargerLink
         doc["d"] = chargeLevel;
         doc["e"] = targetChargeLevel;
 
-        serializeJson(doc, stream);
+        serializeMsgPack(doc, stream);
         
         Serial.println("Sent message to charger:");
         serializeJson(doc, Serial);
@@ -39,7 +39,7 @@ struct ChargerLink
 
         doc["a"] = 0;
 
-        serializeJson(doc, stream);
+        serializeMsgPack(doc, stream);
         
         Serial.println("Sent message to charger:");
         serializeJson(doc, Serial);
@@ -54,13 +54,13 @@ struct ChargerLink
     bool read()
     {
         DynamicJsonDocument doc(100);
-        DeserializationError error = deserializeJson(doc, stream);
+        DeserializationError error = deserializeMsgPack(doc, stream);
 
         while (!stream.doneReading());;
 
         if (error)
         {
-            Serial.print("deserializeJson() failed: ");
+            Serial.print("deserializeMsgPack() failed: ");
             Serial.println(error.c_str());
             return false;
         }

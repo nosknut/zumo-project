@@ -27,7 +27,7 @@ struct CarLink
         doc["e"] = chargeState.accountBalance;
         doc["f"] = chargeState.targetChargeLevel;
         
-        serializeJson(doc, stream);
+        serializeMsgPack(doc, stream);
 
         Serial.println("Sent message to car:");
         serializeJson(doc, Serial);
@@ -41,13 +41,13 @@ struct CarLink
 
     bool read()
     {
-        DeserializationError error = deserializeJson(incomingMessageDoc, stream);
+        DeserializationError error = deserializeMsgPack(incomingMessageDoc, stream);
         
         while (!stream.doneReading());
         
         if (error)
         {
-            Serial.print("deserializeJson() failed: ");
+            Serial.print("deserializeMsgPack() failed: ");
             Serial.println(error.c_str());
             return false;
         }
