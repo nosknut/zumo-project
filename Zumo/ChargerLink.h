@@ -30,9 +30,11 @@ struct ChargerLink
 
         serializeMsgPack(doc, stream);
 
+#ifdef DEBUG_CHARGER_LINK
         Serial.println("Sent message to charger:");
         serializeJson(doc, Serial);
         Serial.println();
+#endif
     }
 
     void stopCharging(int carId)
@@ -43,9 +45,11 @@ struct ChargerLink
 
         serializeMsgPack(doc, stream);
 
+#ifdef DEBUG_CHARGER_LINK
         Serial.println("Sent message to charger:");
         serializeJson(doc, Serial);
         Serial.println();
+#endif
     }
 
     bool read()
@@ -71,22 +75,28 @@ struct ChargerLink
 
         if (error)
         {
+#ifdef DEBUG_CHARGER_LINK
             Serial.print("deserializeMsgPack() failed: ");
             Serial.println(error.c_str());
+#endif
 
             signal = ChargerLinkSignal::NONE;
             return false;
         }
 
+#ifdef DEBUG_CHARGER_LINK
         Serial.println("Received message from charger:");
         serializeJson(doc, Serial);
         Serial.println();
+#endif
 
         int command = doc["a"];
 
         if (command != 2)
         {
-            Serial.println("Received invalid command from car: " + command);
+#ifdef DEBUG_CHARGER_LINK
+            Serial.println("Received invalid command from charger: " + command);
+#endif
             signal = ChargerLinkSignal::NONE;
             return false;
         }

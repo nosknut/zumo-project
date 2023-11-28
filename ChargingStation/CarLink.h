@@ -34,9 +34,11 @@ struct CarLink
 
         serializeMsgPack(doc, stream);
 
+#ifdef DEBUG_CAR_LINK
         Serial.println("Sent message to car:");
         serializeJson(doc, Serial);
         Serial.println();
+#endif
     }
 
     bool read()
@@ -55,16 +57,20 @@ struct CarLink
 
         if (error)
         {
+#ifdef DEBUG_CAR_LINK
             Serial.print("deserializeMsgPack() failed: ");
             Serial.println(error.c_str());
+#endif
 
             signal = CarLinkSignal::NONE;
             return false;
         }
 
+#ifdef DEBUG_CAR_LINK
         Serial.println("Received message from car:");
         serializeJson(doc, Serial);
         Serial.println();
+#endif
 
         if (doc.containsKey("a"))
         {

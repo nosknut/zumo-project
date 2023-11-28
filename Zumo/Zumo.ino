@@ -1,3 +1,4 @@
+#define DEBUG_CHARGER_LINK
 #include "ChargerLink.h"
 
 int carId = 1;

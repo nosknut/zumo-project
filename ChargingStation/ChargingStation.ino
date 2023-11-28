@@ -1,3 +1,4 @@
+#define DEBUG_CAR_LINK
 #include "Timer.h"
 #include "CarLink.h"
 #include "CarDatabase.h"
