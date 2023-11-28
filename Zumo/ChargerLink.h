@@ -1,22 +1,17 @@
-#ifndef CAR_LINK_h
-#define CAR_LINK_h
+#ifndef CHARGER_LINK_h
+#define CHARGER_LINK_h
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include "ChargerState.h"
 #include "ZumoIrSocket.h"
-
-enum class ChargerLinkSignal
-{
-    NONE = 0,
-    COMMAND = 1,
-    LINK_AVAILABLE = 2,
-};
+#include "ChargerLinkSignal.h"
 
 struct ChargerLink
 {
     ZumoIrSocket &stream;
 
+    ChargerLinkSignal signal = ChargerLinkSignal::NONE;
     ChargerState chargerState;
 
     ChargerLink(ZumoIrSocket &stream) : stream(stream)
@@ -53,17 +48,19 @@ struct ChargerLink
         Serial.println();
     }
 
-    int available()
+    bool read()
     {
-        return stream.available();
-    }
+        if (!stream.available())
+        {
+            signal = ChargerLinkSignal::NONE;
+            return false;
+        }
 
-    ChargerLinkSignal read()
-    {
         if (stream.peek() == '@')
         {
             stream.read();
-            return ChargerLinkSignal::LINK_AVAILABLE;
+            signal = ChargerLinkSignal::LINK_AVAILABLE;
+            return true;
         }
 
         DynamicJsonDocument doc(100);
@@ -76,7 +73,9 @@ struct ChargerLink
         {
             Serial.print("deserializeMsgPack() failed: ");
             Serial.println(error.c_str());
-            return ChargerLinkSignal::NONE;
+
+            signal = ChargerLinkSignal::NONE;
+            return false;
         }
 
         Serial.println("Received message from charger:");
@@ -88,7 +87,8 @@ struct ChargerLink
         if (command != 2)
         {
             Serial.println("Received invalid command from car: " + command);
-            return ChargerLinkSignal::NONE;
+            signal = ChargerLinkSignal::NONE;
+            return false;
         }
 
         chargerState.carId = doc["b"];
@@ -97,12 +97,8 @@ struct ChargerLink
         chargerState.accountBalance = doc["e"];
         chargerState.targetChargeLevel = doc["f"];
 
-        return ChargerLinkSignal::COMMAND;
-    }
-
-    ChargerState getChargerState()
-    {
-        return chargerState;
+        signal = ChargerLinkSignal::CHARGE_STATE;
+        return true;
     }
 };
 

@@ -2,6 +2,8 @@
 #define CAR_LINK_h
 
 #include <Arduino.h>
+#include "CarLinkSignal.h"
+#include "StartCommand.h"
 #include <ArduinoJson.h>
 #include "ChargeState.h"
 #include "IrSocket.h"
@@ -12,7 +14,8 @@ struct CarLink
     Timer timer;
     IrSocket &stream;
 
-    DynamicJsonDocument incomingMessageDoc = DynamicJsonDocument(100);
+    CarLinkSignal signal = CarLinkSignal::NONE;
+    StartCommand startCommand;
 
     CarLink(IrSocket &stream) : stream(stream)
     {
@@ -36,14 +39,16 @@ struct CarLink
         Serial.println();
     }
 
-    int available()
-    {
-        return stream.available();
-    }
-
     bool read()
     {
-        DeserializationError error = deserializeMsgPack(incomingMessageDoc, stream);
+        if (!stream.available())
+        {
+            signal = CarLinkSignal::NONE;
+            return false;
+        }
+
+        DynamicJsonDocument doc(100);
+        DeserializationError error = deserializeMsgPack(doc, stream);
 
         while (!stream.doneReading())
             stream.read();
@@ -52,19 +57,39 @@ struct CarLink
         {
             Serial.print("deserializeMsgPack() failed: ");
             Serial.println(error.c_str());
+
+            signal = CarLinkSignal::NONE;
             return false;
         }
 
         Serial.println("Received message from car:");
-        serializeJson(incomingMessageDoc, Serial);
+        serializeJson(doc, Serial);
         Serial.println();
 
-        return true;
-    }
+        if (doc.containsKey("a"))
+        {
+            int command = doc["a"];
 
-    DynamicJsonDocument &getMessage()
-    {
-        return incomingMessageDoc;
+            if (command == 0)
+            {
+                signal = CarLinkSignal::STOP_CHARGING;
+                return true;
+            }
+
+            if (command == 1)
+            {
+                startCommand.carId = doc["b"];
+                startCommand.allowDebt = doc["c"];
+                startCommand.chargeLevel = doc["d"];
+                startCommand.targetChargeLevel = doc["e"];
+
+                signal = CarLinkSignal::START_CHARGING;
+                return true;
+            }
+        }
+
+        signal = CarLinkSignal::NONE;
+        return false;
     }
 
     // Periodically emit a signal so the car can detect the charger

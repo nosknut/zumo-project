@@ -1,9 +1,6 @@
 #include "Timer.h"
 #include "CarLink.h"
-#include "IrSocket.h"
-#include "JsonStore.h"
 #include "CarDatabase.h"
-#include "ChargeState.h"
 
 int chargerId = 0;
 
@@ -49,32 +46,25 @@ void updateCharging()
 
 void updateCarLink()
 {
-    if (carLink.available())
+    if (carLink.read())
     {
-        if (carLink.read())
+        if (carLink.signal == CarLinkSignal::START_CHARGING)
         {
-            DynamicJsonDocument &doc = carLink.getMessage();
+            int accountBalance = carDatabase.getAccountBalance(carLink.startCommand.carId, jsonStore);
 
-            if (doc.containsKey("a"))
-            {
-                int command = doc["a"];
+            chargeState.start(
+                carLink.startCommand.carId,
+                accountBalance,
+                carLink.startCommand.chargeLevel,
+                carLink.startCommand.targetChargeLevel,
+                carLink.startCommand.allowDebt);
 
-                if (command == 1)
-                {
-                    String carId = doc["b"];
-                    bool allowDebt = doc["c"];
-                    int chargeLevel = doc["d"];
-                    int targetChargeLevel = doc["e"];
-                    int accountBalance = carDatabase.getAccountBalance(carId, jsonStore);
-                    chargeState.start(carId, accountBalance, chargeLevel, targetChargeLevel, allowDebt);
-                    carLink.sendChargeReport(chargeState);
-                }
+            carLink.sendChargeReport(chargeState);
+        }
 
-                if (command == 0)
-                {
-                    stopCharging();
-                }
-            }
+        if (carLink.signal == CarLinkSignal::STOP_CHARGING)
+        {
+            stopCharging();
         }
     }
 

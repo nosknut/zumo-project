@@ -7,7 +7,7 @@ struct ChargeState
 {
     Timer timer;
 
-    String carId = "";
+    int carId = 0;
     int chargeLevel = 0;
     int accountBalance = 0;
     bool allowDebt = false;
@@ -16,19 +16,19 @@ struct ChargeState
     bool charging = false;
 
     void start(
-        String startingCarId,
-        int startingBalance,
-        int startingLevel,
-        int startingTargetChargeLevel,
-        bool startingAllowDebt)
+        int newCarId,
+        int newBalance,
+        int newLevel,
+        int newTargetChargeLevel,
+        bool newAllowDebt)
     {
         timer.reset();
         charging = true;
-        carId = startingCarId;
-        chargeLevel = startingLevel;
-        allowDebt = startingAllowDebt;
-        accountBalance = startingBalance;
-        targetChargeLevel = startingTargetChargeLevel;
+        carId = newCarId;
+        chargeLevel = newLevel;
+        allowDebt = newAllowDebt;
+        accountBalance = newBalance;
+        targetChargeLevel = newTargetChargeLevel;
     }
 
     /**
@@ -80,7 +80,7 @@ struct ChargeState
 
     void reset()
     {
-        carId = "";
+        carId = 0;
         chargeLevel = 0;
         accountBalance = 0;
         targetChargeLevel = 0;
