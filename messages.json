@@ -1,0 +1,46 @@
+{
+    "commands": {
+        "zumo": [
+            {
+                "command": "start-charging",
+                "carId": 1,
+                "allowDebt": true,
+                "chargeLevel": 10,
+                "targetChargeLevel": 80
+            },
+            {
+                "command": "stop-charging"
+            }
+        ],
+        "charger": [
+            {
+                "command": "charge-report",
+                "carId": 1,
+                "charging": true,
+                "chargeLevel": 40,
+                "accountBalance": -4,
+                "targetChargeLevel": 80
+            }
+        ]
+    },
+    "aliases": {
+        "stop-charging": {
+            "a": "command(0)"
+        },
+        "start-charging": {
+            "a": "command(1)",
+            "b": "carId",
+            "c": "allowDebt",
+            "d": "chargeLevel",
+            "e": "targetChargeLevel"
+        },
+        "charge-report": {
+            "a": "command(2)",
+            "b": "carId",
+            "c": "charging",
+            "d": "chargeLevel",
+            "e": "accountBalance",
+            "f": "targetChargeLevel"
+        }
+    }
+}
