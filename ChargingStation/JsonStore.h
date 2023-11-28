@@ -16,14 +16,14 @@ struct JsonStore
     {
         DynamicJsonDocument doc(size);
         EepromStream eepromStream(address, size);
-        deserializeJson(doc, eepromStream);
+        deserializeMsgPack(doc, eepromStream);
         return doc;
     }
 
     void write(DynamicJsonDocument doc)
     {
         EepromStream eepromStream(address, size);
-        serializeJson(doc, eepromStream);
+        serializeMsgPack(doc, eepromStream);
     }
 };
 
