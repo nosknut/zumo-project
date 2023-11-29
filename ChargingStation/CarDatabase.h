@@ -3,42 +3,39 @@
 
 #include "JsonStore.h"
 
+String ACCOUNT_BALANCE_KEY = "a";
+
 struct CarDatabase
 {
-    void createCar(int carId, DynamicJsonDocument doc) {
-        if (!doc.containsKey("cars")) {
-            doc["cars"] = JsonObject();
-        }
-
-        if (!doc["cars"].containsKey(String(carId))) {
-            doc["cars"][carId] = JsonObject();
-            doc["cars"][carId]["accountBalance"] = 100;
+    void createCar(int carId, JsonStore &jsonStore)
+    {
+        if (jsonStore.doc["cars"][String(carId)].isNull())
+        {
+            jsonStore.doc["cars"][String(carId)][ACCOUNT_BALANCE_KEY] = 100;
         }
     }
 
-    void setCarField(int carId, int value, String field, JsonStore jsonStore)
+    void setCarField(int carId, int value, String field, JsonStore &jsonStore)
     {
-        DynamicJsonDocument doc = jsonStore.read();
-        createCar(carId, doc);
-        doc["cars"][carId][field] = value;
-        jsonStore.write(doc);
+        createCar(carId, jsonStore);
+        jsonStore.doc["cars"][String(carId)][field] = value;
+        jsonStore.writeToEeprom();
     }
 
-    int getCarField(int carId, String field, JsonStore jsonStore)
+    int getCarField(int carId, String field, JsonStore &jsonStore)
     {
-        DynamicJsonDocument doc = jsonStore.read();
-        createCar(carId, doc);
-        return jsonStore.read()["cars"][carId][field];
+        createCar(carId, jsonStore);
+        return jsonStore.doc["cars"][String(carId)][field];
     }
 
-    void setAccountBalance(int carId, int balance, JsonStore jsonStore)
+    void setAccountBalance(int carId, int balance, JsonStore &jsonStore)
     {
-        setCarField(carId, balance, "accountBalance", jsonStore);
+        setCarField(carId, balance, ACCOUNT_BALANCE_KEY, jsonStore);
     }
 
-    int getAccountBalance(int carId, JsonStore jsonStore)
+    int getAccountBalance(int carId, JsonStore &jsonStore)
     {
-        return getCarField(carId, "accountBalance", jsonStore);
+        return getCarField(carId, ACCOUNT_BALANCE_KEY, jsonStore);
     }
 };
 

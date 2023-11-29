@@ -9,21 +9,38 @@
 // https://arduinojson.org/v6/how-to/store-a-json-document-in-eeprom/
 struct JsonStore
 {
-    int size = 0;
-    int address = 0;
+    int address;
+    int size;
 
-    DynamicJsonDocument read()
+    DynamicJsonDocument doc;
+
+    JsonStore(int address, int size) : address(address), size(size), doc(size)
     {
-        DynamicJsonDocument doc(size);
-        EepromStream eepromStream(address, size);
-        deserializeMsgPack(doc, eepromStream);
-        return doc;
     }
 
-    void write(DynamicJsonDocument doc)
+    void setup()
     {
-        EepromStream eepromStream(address, size);
-        serializeMsgPack(doc, eepromStream);
+        // Read from EEPROM
+        EepromStream stream(address, size);
+        DeserializationError error = deserializeJson(doc, stream);
+
+        if (error)
+        {
+            Serial.println("Failed to read from EEPROM");
+            Serial.println(error.c_str());
+
+            doc.as<JsonObject>();
+        }
+
+        Serial.println("Read from EEPROM:");
+        serializeJson(doc, Serial);
+        Serial.println();
+    }
+
+    void writeToEeprom()
+    {
+        EepromStream stream(address, size);
+        serializeJson(doc, stream);
     }
 };
 

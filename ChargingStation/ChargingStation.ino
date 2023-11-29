@@ -7,7 +7,7 @@
 int chargerId = 0;
 
 Timer chargeTimer;
-JsonStore jsonStore;
+JsonStore jsonStore(0, 200);
 ChargeState chargeState;
 CarDatabase carDatabase;
 IrSocket irSocket(3, 5);
@@ -83,11 +83,10 @@ void setup()
 
     irSocket.begin();
 
-    jsonStore.address = 0;
-    jsonStore.size = 100;
-
     display.setup();
     display.update(chargeState);
+
+    jsonStore.setup();
 }
 
 void loop()
