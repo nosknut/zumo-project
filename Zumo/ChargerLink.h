@@ -5,10 +5,14 @@
 #include <ArduinoJson.h>
 #include "ChargerState.h"
 #include "ZumoIrSocket.h"
+#include "LinkCommands.h"
 #include "ChargerLinkSignal.h"
 
 struct ChargerLink
 {
+    int earnings = 0;
+    int balance = 0;
+
     ZumoIrSocket &stream;
 
     ChargerLinkSignal signal = ChargerLinkSignal::NONE;
@@ -18,11 +22,35 @@ struct ChargerLink
     {
     }
 
+    void addEarnings(int amount)
+    {
+        earnings += amount;
+    }
+
+    void requestBalance(int carId)
+    {
+        DynamicJsonDocument doc(30);
+
+        doc["a"] = LinkCommands::REQUEST_BALANCE;
+        doc["b"] = carId;
+        doc["c"] = earnings;
+
+        serializeMsgPack(doc, stream);
+
+        earnings = 0;
+
+#ifdef DEBUG_CHARGER_LINK
+        Serial.println("Sent message to charger:");
+        serializeJson(doc, Serial);
+        Serial.println();
+#endif
+    }
+
     void startCharging(int carId, bool allowDebt, int chargeLevel, int targetChargeLevel)
     {
         DynamicJsonDocument doc(50);
 
-        doc["a"] = 1;
+        doc["a"] = LinkCommands::START_CHARGING;
         doc["b"] = carId;
         doc["c"] = int(allowDebt);
         doc["d"] = chargeLevel;
@@ -41,7 +69,7 @@ struct ChargerLink
     {
         DynamicJsonDocument doc(20);
 
-        doc["a"] = 0;
+        doc["a"] = LinkCommands::STOP_CHARGING;
 
         serializeMsgPack(doc, stream);
 
@@ -60,7 +88,7 @@ struct ChargerLink
             return false;
         }
 
-        if (stream.peek() == '@')
+        if (stream.peek() == LinkCommands::LINK_AVAILABLE)
         {
             stream.read();
             signal = ChargerLinkSignal::LINK_AVAILABLE;
@@ -98,23 +126,31 @@ struct ChargerLink
 
         int command = doc["a"];
 
-        if (command != 2)
+        if (command == LinkCommands::CHARGE_STATE)
         {
-#ifdef DEBUG_CHARGER_LINK
-            Serial.println("Received invalid command from charger: " + command);
-#endif
-            signal = ChargerLinkSignal::NONE;
-            return false;
+            chargerState.carId = doc["b"];
+            chargerState.charging = doc["c"];
+            chargerState.chargeLevel = doc["d"];
+            chargerState.accountBalance = doc["e"];
+            chargerState.targetChargeLevel = doc["f"];
+
+            signal = ChargerLinkSignal::CHARGE_STATE;
+            return true;
         }
 
-        chargerState.carId = doc["b"];
-        chargerState.charging = doc["c"];
-        chargerState.chargeLevel = doc["d"];
-        chargerState.accountBalance = doc["e"];
-        chargerState.targetChargeLevel = doc["f"];
+        if (command == LinkCommands::BALANCE)
+        {
+            balance = doc["c"];
 
-        signal = ChargerLinkSignal::CHARGE_STATE;
-        return true;
+            signal = ChargerLinkSignal::BALANCE;
+            return true;
+        }
+
+#ifdef DEBUG_CHARGER_LINK
+        Serial.println("Received invalid command from charger: " + command);
+#endif
+        signal = ChargerLinkSignal::NONE;
+        return false;
     }
 };
 

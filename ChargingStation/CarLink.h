@@ -3,7 +3,9 @@
 
 #include <Arduino.h>
 #include "CarLinkSignal.h"
+#include "LinkCommands.h"
 #include "StartCommand.h"
+#include "RequestBalanceCommand.h"
 #include <ArduinoJson.h>
 #include "ChargeState.h"
 #include "IrSocket.h"
@@ -16,6 +18,7 @@ struct CarLink
 
     CarLinkSignal signal = CarLinkSignal::NONE;
     StartCommand startCommand;
+    RequestBalanceCommand requestBalanceCommand;
 
     CarLink(IrSocket &stream) : stream(stream)
     {
@@ -25,12 +28,29 @@ struct CarLink
     {
         DynamicJsonDocument doc(100);
 
-        doc["a"] = 2;
+        doc["a"] = LinkCommands::CHARGE_STATE;
         doc["b"] = chargeState.carId;
         doc["c"] = int(chargeState.charging);
         doc["d"] = chargeState.chargeLevel;
         doc["e"] = chargeState.accountBalance;
         doc["f"] = chargeState.targetChargeLevel;
+
+        serializeMsgPack(doc, stream);
+
+#ifdef DEBUG_CAR_LINK
+        Serial.println("Sent message to car:");
+        serializeJson(doc, Serial);
+        Serial.println();
+#endif
+    }
+
+    void sendBalance(int carId, int balance)
+    {
+        DynamicJsonDocument doc(100);
+
+        doc["a"] = LinkCommands::BALANCE;
+        doc["b"] = carId;
+        doc["c"] = balance;
 
         serializeMsgPack(doc, stream);
 
@@ -76,13 +96,13 @@ struct CarLink
         {
             int command = doc["a"];
 
-            if (command == 0)
+            if (command == LinkCommands::STOP_CHARGING)
             {
                 signal = CarLinkSignal::STOP_CHARGING;
                 return true;
             }
 
-            if (command == 1)
+            if (command == LinkCommands::START_CHARGING)
             {
                 startCommand.carId = doc["b"];
                 startCommand.allowDebt = doc["c"];
@@ -90,6 +110,15 @@ struct CarLink
                 startCommand.targetChargeLevel = doc["e"];
 
                 signal = CarLinkSignal::START_CHARGING;
+                return true;
+            }
+
+            if (command == LinkCommands::REQUEST_BALANCE)
+            {
+                requestBalanceCommand.carId = doc["b"];
+                requestBalanceCommand.earnings = doc["c"];
+
+                signal = CarLinkSignal::REQUEST_BALANCE;
                 return true;
             }
         }
@@ -110,7 +139,7 @@ struct CarLink
         if (!timer.isFinished(1000))
             return;
 
-        stream.print('@');
+        stream.print(LinkCommands::LINK_AVAILABLE);
         timer.reset();
     }
 };

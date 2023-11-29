@@ -53,6 +53,16 @@ void updateCarLink()
 {
     if (carLink.read())
     {
+        if (carLink.signal == CarLinkSignal::REQUEST_BALANCE)
+        {
+            int carId = carLink.requestBalanceCommand.carId;
+            int accountBalance = carDatabase.getAccountBalance(carId, jsonStore);
+            accountBalance += carLink.requestBalanceCommand.earnings;
+            carDatabase.setAccountBalance(carId, accountBalance, jsonStore);
+            carLink.sendBalance(carId, accountBalance);
+            chargeState.timer.reset();
+        }
+
         if (carLink.signal == CarLinkSignal::START_CHARGING)
         {
             int accountBalance = carDatabase.getAccountBalance(carLink.startCommand.carId, jsonStore);
@@ -66,6 +76,7 @@ void updateCarLink()
 
             display.update(chargeState);
             carLink.sendChargeReport(chargeState);
+            chargeState.timer.reset();
         }
 
         if (carLink.signal == CarLinkSignal::STOP_CHARGING)

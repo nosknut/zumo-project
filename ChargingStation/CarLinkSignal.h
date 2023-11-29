@@ -6,6 +6,7 @@ enum class CarLinkSignal
     NONE = 0,
     START_CHARGING = 1,
     STOP_CHARGING = 2,
+    REQUEST_BALANCE = 3,
 };
 
 #endif
