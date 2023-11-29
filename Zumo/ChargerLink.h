@@ -27,6 +27,17 @@ struct ChargerLink
         earnings += amount;
     }
 
+    void sendMessage(DynamicJsonDocument &doc)
+    {
+        serializeMsgPack(doc, stream);
+
+#ifdef DEBUG_CHARGER_LINK
+        Serial.print("ChargerLink(out): ");
+        serializeJson(doc, Serial);
+        Serial.println();
+#endif
+    }
+
     void requestBalance(int carId)
     {
         DynamicJsonDocument doc(30);
@@ -35,15 +46,9 @@ struct ChargerLink
         doc["b"] = carId;
         doc["c"] = earnings;
 
-        serializeMsgPack(doc, stream);
+        sendMessage(doc);
 
         earnings = 0;
-
-#ifdef DEBUG_CHARGER_LINK
-        Serial.println("Sent message to charger:");
-        serializeJson(doc, Serial);
-        Serial.println();
-#endif
     }
 
     void startCharging(int carId, bool allowDebt, int chargeLevel, int targetChargeLevel)
@@ -56,28 +61,14 @@ struct ChargerLink
         doc["d"] = chargeLevel;
         doc["e"] = targetChargeLevel;
 
-        serializeMsgPack(doc, stream);
-
-#ifdef DEBUG_CHARGER_LINK
-        Serial.println("Sent message to charger:");
-        serializeJson(doc, Serial);
-        Serial.println();
-#endif
+        sendMessage(doc);
     }
 
     void stopCharging(int carId)
     {
         DynamicJsonDocument doc(20);
-
         doc["a"] = LinkCommands::STOP_CHARGING;
-
-        serializeMsgPack(doc, stream);
-
-#ifdef DEBUG_CHARGER_LINK
-        Serial.println("Sent message to charger:");
-        serializeJson(doc, Serial);
-        Serial.println();
-#endif
+        sendMessage(doc);
     }
 
     bool read()
@@ -119,7 +110,7 @@ struct ChargerLink
         }
 
 #ifdef DEBUG_CHARGER_LINK
-        Serial.println("Received message from charger:");
+        Serial.print("ChargerLink(in):  ");
         serializeJson(doc, Serial);
         Serial.println();
 #endif

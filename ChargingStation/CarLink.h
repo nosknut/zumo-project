@@ -24,6 +24,17 @@ struct CarLink
     {
     }
 
+    void sendMessage(DynamicJsonDocument &doc)
+    {
+        serializeMsgPack(doc, stream);
+
+#ifdef DEBUG_CAR_LINK
+        Serial.print("CarLink(out): ");
+        serializeJson(doc, Serial);
+        Serial.println();
+#endif
+    }
+
     void sendChargeReport(ChargeState chargeState)
     {
         DynamicJsonDocument doc(100);
@@ -35,13 +46,7 @@ struct CarLink
         doc["e"] = chargeState.accountBalance;
         doc["f"] = chargeState.targetChargeLevel;
 
-        serializeMsgPack(doc, stream);
-
-#ifdef DEBUG_CAR_LINK
-        Serial.println("Sent message to car:");
-        serializeJson(doc, Serial);
-        Serial.println();
-#endif
+        sendMessage(doc);
     }
 
     void sendBalance(int carId, int balance)
@@ -52,13 +57,7 @@ struct CarLink
         doc["b"] = carId;
         doc["c"] = balance;
 
-        serializeMsgPack(doc, stream);
-
-#ifdef DEBUG_CAR_LINK
-        Serial.println("Sent message to car:");
-        serializeJson(doc, Serial);
-        Serial.println();
-#endif
+        sendMessage(doc);
     }
 
     bool read()
@@ -87,7 +86,7 @@ struct CarLink
         }
 
 #ifdef DEBUG_CAR_LINK
-        Serial.println("Received message from car:");
+        Serial.print("CarLink(in):  ");
         serializeJson(doc, Serial);
         Serial.println();
 #endif
