@@ -41,7 +41,7 @@ struct ChargeState
             return false;
         }
 
-        if (!timer.isFinished(6000))
+        if (!timer.isFinished(2000))
         {
             return false;
         }
