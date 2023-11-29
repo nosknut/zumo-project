@@ -64,12 +64,18 @@ struct ChargerLink
         {
             stream.read();
             signal = ChargerLinkSignal::LINK_AVAILABLE;
+
+            // Wait for all remaining signals and residuals to be received
+            while (!stream.doneReading())
+                stream.read();
+
             return true;
         }
 
         DynamicJsonDocument doc(100);
         DeserializationError error = deserializeMsgPack(doc, stream);
 
+        // Wait for all remaining signals and residuals to be received
         while (!stream.doneReading())
             stream.read();
 
