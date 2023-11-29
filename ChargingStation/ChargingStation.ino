@@ -1,6 +1,7 @@
 #define DEBUG_CAR_LINK
 #include "Timer.h"
 #include "CarLink.h"
+#include "Display.h"
 #include "CarDatabase.h"
 
 int chargerId = 0;
@@ -9,8 +10,9 @@ Timer chargeTimer;
 JsonStore jsonStore;
 ChargeState chargeState;
 CarDatabase carDatabase;
-IrSocket irSocket(3, 11);
+IrSocket irSocket(3, 5);
 CarLink carLink(irSocket);
+Display display;
 
 void stopCharging()
 {
@@ -20,6 +22,7 @@ void stopCharging()
         jsonStore);
 
     chargeState.stop();
+    display.update(chargeState);
     carLink.sendChargeReport(chargeState);
     chargeState.reset();
 }
@@ -28,6 +31,7 @@ void updateCharging()
 {
     if (chargeState.update())
     {
+        display.update(chargeState);
         carLink.sendChargeReport(chargeState);
     }
 
@@ -60,6 +64,7 @@ void updateCarLink()
                 carLink.startCommand.targetChargeLevel,
                 carLink.startCommand.allowDebt);
 
+            display.update(chargeState);
             carLink.sendChargeReport(chargeState);
         }
 
@@ -80,6 +85,9 @@ void setup()
 
     jsonStore.address = 0;
     jsonStore.size = 100;
+
+    display.setup();
+    display.update(chargeState);
 }
 
 void loop()
