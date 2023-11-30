@@ -1,12 +1,10 @@
 #define DEBUG_CAR_LINK
-#include "Timer.h"
-#include "CarLink.h"
+#include "CarLink/CarLink.h"
 #include "Display.h"
-#include "CarDatabase.h"
+#include "Database/CarDatabase.h"
 
 int chargerId = 0;
 
-Timer chargeTimer;
 JsonStore jsonStore(0, 200);
 ChargeState chargeState;
 CarDatabase carDatabase;
@@ -60,7 +58,7 @@ void updateCarLink()
             accountBalance += carLink.requestBalanceCommand.earnings;
             carDatabase.setAccountBalance(carId, accountBalance, jsonStore);
             carLink.sendBalance(carId, accountBalance);
-            chargeState.timer.reset();
+            chargeState.resetTimer();
         }
 
         if (carLink.signal == CarLinkSignal::START_CHARGING)
@@ -76,7 +74,7 @@ void updateCarLink()
 
             display.update(chargeState);
             carLink.sendChargeReport(chargeState);
-            chargeState.timer.reset();
+            chargeState.resetTimer();
         }
 
         if (carLink.signal == CarLinkSignal::STOP_CHARGING)

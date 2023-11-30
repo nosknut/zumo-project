@@ -3,8 +3,8 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
-#include "ChargerState.h"
-#include "ZumoIrSocket.h"
+#include "Commands/ChargerState.h"
+#include "IrSocket/ZumoIrSocket.h"
 #include "LinkCommands.h"
 #include "ChargerLinkSignal.h"
 

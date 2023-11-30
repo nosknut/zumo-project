@@ -3,17 +3,17 @@
 
 #include <Arduino.h>
 #include "CarLinkSignal.h"
-#include "LinkCommands.h"
-#include "StartCommand.h"
-#include "RequestBalanceCommand.h"
+#include "Commands/LinkCommands.h"
+#include "Commands/StartCommand.h"
+#include "Commands/RequestBalanceCommand.h"
 #include <ArduinoJson.h>
 #include "ChargeState.h"
-#include "IrSocket.h"
-#include "Timer.h"
+#include "IrSocket/IrSocket.h"
 
 struct CarLink
 {
-    Timer timer;
+    unsigned long timer = 0;
+    unsigned long discoveryPingPeriod = 1000;
     IrSocket &stream;
 
     CarLinkSignal signal = CarLinkSignal::NONE;
@@ -23,7 +23,7 @@ struct CarLink
     CarLink(IrSocket &stream) : stream(stream)
     {
     }
-
+    
     void sendMessage(DynamicJsonDocument &doc)
     {
         serializeMsgPack(doc, stream);
@@ -135,11 +135,11 @@ struct CarLink
         if (!stream.doneReading())
             return;
 
-        if (!timer.isFinished(1000))
+        if ((millis() - timer) < discoveryPingPeriod)
             return;
 
         stream.print(LinkCommands::LINK_AVAILABLE);
-        timer.reset();
+        timer = millis();
     }
 };
 

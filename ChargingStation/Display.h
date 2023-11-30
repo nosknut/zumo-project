@@ -1,9 +1,8 @@
 #ifndef DISPLAY_h
 #define DISPLAY_h
 
-#include "Timer.h"
 #include <U8glib.h>
-#include "ChargeState.h"
+#include "CarLink/ChargeState.h"
 
 struct Display
 {

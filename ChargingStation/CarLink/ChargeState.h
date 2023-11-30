@@ -1,11 +1,10 @@
 #ifndef CHARGE_STATE_h
 #define CHARGE_STATE_h
 
-#include "Timer.h"
-
 struct ChargeState
 {
-    Timer timer;
+    unsigned long timer = 0;
+    unsigned long chargeStateUpdatePeriod = 2000;
 
     int carId = 0;
     int chargeLevel = 0;
@@ -15,6 +14,11 @@ struct ChargeState
 
     bool charging = false;
 
+    void resetTimer()
+    {
+        timer = millis();
+    }
+
     void start(
         int newCarId,
         int newBalance,
@@ -22,7 +26,7 @@ struct ChargeState
         int newTargetChargeLevel,
         bool newAllowDebt)
     {
-        timer.reset();
+        resetTimer();
         charging = true;
         carId = newCarId;
         chargeLevel = newLevel;
@@ -41,7 +45,7 @@ struct ChargeState
             return false;
         }
 
-        if (!timer.isFinished(2000))
+        if ((millis() - timer) < chargeStateUpdatePeriod)
         {
             return false;
         }
@@ -58,7 +62,7 @@ struct ChargeState
             chargeLevel = min(chargeLevel, targetChargeLevel);
         }
 
-        timer.reset();
+        resetTimer();
 
         return true;
     }
